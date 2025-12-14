@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                bilibili直播净化
 // @namespace           https://github.com/lzghzr/GreasemonkeyJS
-// @version             4.3.6
+// @version             4.3.7
 // @author              lzghzr
 // @description         增强直播屏蔽功能, 提高直播观看体验
 // @icon                data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTUiIHN0cm9rZT0iIzAwYWVlYyIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PHRleHQgZm9udC1mYW1pbHk9Ik5vdG8gU2FucyBDSksgU0MiIGZvbnQtc2l6ZT0iMjIiIHg9IjUiIHk9IjIzIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMCIgZmlsbD0iIzAwYWVlYyI+5ruaPC90ZXh0Pjwvc3ZnPg==
@@ -477,6 +477,10 @@ $<mut_n>("text",{attrs:{"font-family":"Noto Sans CJK SC","font-size":"14",x:"5",
           handler.next(XHRconfig);
         },
         onResponse: async (XHRresponse, handler) => {
+          if (XHRresponse.config.url.includes('/xlive/web-room/v1/index/getInfoByRoom')) {
+            XHRresponse.response = XHRresponse.response.replace('"open_anonymous":true', '"open_anonymous":false');
+            console.info(...Tools.scriptName('房间匿名信息 已拦截'));
+          }
           if (this.config.menu.noRoomSkin.enable) {
             if (XHRresponse.config.url.includes('/xlive/app-room/v2/guardTab/topList')) {
               XHRresponse.response = XHRresponse.response.replace(/"anchor_guard_achieve_level":\d+/, '"anchor_guard_achieve_level":0');
@@ -530,6 +534,13 @@ $<mut_n>("text",{attrs:{"font-family":"Noto Sans CJK SC","font-size":"14",x:"5",
       apply: async function (target, _this, args) {
         const resource = args[0];
         let url = (resource instanceof Request) ? resource.url : resource;
+        if (url.includes('/xlive/web-room/v1/index/getInfoByRoom')) {
+          const response = await Reflect.apply(target, _this, args);
+          const body = await response.text();
+          const newResponse = new Response(body.replace('"open_anonymous":true', '"open_anonymous":false'));
+          console.info(...Tools.scriptName('房间匿名信息 已拦截'));
+          return newResponse;
+        }
         if (that.config.menu.rankInvisible.enable && that.rankInvisible) {
           if (url.includes('/xlive/web-room/v1/index/getDanmuInfo')) {
             args[1] ? args[1].credentials = 'same-origin' : args[1] = { credentials: 'same-origin' };
@@ -1307,7 +1318,9 @@ ruid=${ruid}&room_id=${room_id}&page=1&page_size=100&type=${type}&switch=${switc
       await this.userInfoDB.open([["uid", true], ["name", false]]);
     }
     item?.forEach(userInfo => {
-      this.userInfoDB.putData({ crc32: Tools.crc32(userInfo.uid), uid: userInfo.uid, name: userInfo.name });
+      if (!userInfo.name.endsWith('***')) {
+        this.userInfoDB.putData({ crc32: Tools.crc32(userInfo.uid), uid: userInfo.uid, name: userInfo.name });
+      }
     });
   }
 }
