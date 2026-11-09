@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name                bilibili直播净化
 // @namespace           https://github.com/lzghzr/GreasemonkeyJS
-// @version             4.3.11
+// @version             4.3.12
 // @author              lzghzr
 // @description         增强直播屏蔽功能, 提高直播观看体验
 // @icon                data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTUiIHN0cm9rZT0iIzAwYWVlYyIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PHRleHQgZm9udC1mYW1pbHk9Ik5vdG8gU2FucyBDSksgU0MiIGZvbnQtc2l6ZT0iMjIiIHg9IjUiIHk9IjIzIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMCIgZmlsbD0iIzAwYWVlYyI+5ruaPC90ZXh0Pjwvc3ZnPg==
@@ -403,7 +403,8 @@ $<mut_n>("text",{attrs:{"font-family":"Noto Sans CJK SC","font-size":"14",x:"5",
       }
     });
     if (this.config.menu.rankInvisible.enable
-      || this.config.menu.noRoundPlay.enable) {
+      || this.config.menu.noRoundPlay.enable
+      || this.config.menu.noMirrorDanmaku.enable) {
       Array.prototype.concat = new Proxy(Array.prototype.concat, {
         apply: function (target, _this, args) {
           if (args[0] && args[0] instanceof Object && args[0].cmd) {
@@ -751,7 +752,9 @@ $<mut_n>("text",{attrs:{"font-family":"Noto Sans CJK SC","font-size":"14",x:"5",
 .chat-item .pilot-icon,
 .chat-item .pilot-icon ~ br,
 /* 订阅舰长 */
-.chat-item.guard-buy {
+.chat-item.guard-buy,
+/* 上舰飘窗 */
+#guard-popup {
   display: none !important;
 }
 /* 兼容chrome 105以下版本 */
@@ -789,6 +792,10 @@ $<mut_n>("text",{attrs:{"font-family":"Noto Sans CJK SC","font-size":"14",x:"5",
     if (this.config.menu.noGiftMsg.enable) {
       height -= 32;
       cssText += `
+/* 网页全屏 礼物栏 */
+.player-full-win #fullscreen-container {
+  grid-template-rows: 1fr 0 !important;
+}
 /* 调整 礼物聊天 聊天框 */
 .chat-item.danmaku-advanced-effect {
   background: unset !important;
@@ -820,6 +827,7 @@ $<mut_n>("text",{attrs:{"font-family":"Noto Sans CJK SC","font-size":"14",x:"5",
 /* 分享直播间 */
 .chat-item.important-prompt-item,
 /* 礼物栏 */
+.player-full-win #gift-control-vm,
 .gift-control-panel > *:not(.left-part-ctnr),
 #web-player__bottom-bar__container,
 /* 礼物按钮 */
